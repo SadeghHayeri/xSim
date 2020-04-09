@@ -1,0 +1,7 @@
+irancell:
+  auth:
+    phone: ''
+    password: ''
+    session:
+      base_path: ~/.config/manager/irancell/sessions
+      file_name: session
