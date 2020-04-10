@@ -140,5 +140,5 @@ cython_debug/
 
 *.pyc
 
-# idea
 .idea
+.data

@@ -3,5 +3,5 @@ irancell:
     phone: ''
     password: ''
     session:
-      base_path: ~/.config/manager/irancell/sessions
+      base_path: .data/irancell/sessions
       file_name: session
