@@ -2,6 +2,8 @@ import re
 from src.models.enums import IrancellServiceType
 from src.models.offer import Offer
 from math import inf
+from jdatetime import datetime
+
 
 def detect_start_and_end_hours(string_fa):
     am_indexes = [{'type': 'AM', 'index': am.start()} for am in re.finditer('صبح', string_fa)]
@@ -123,7 +125,7 @@ def detect_offer_size_and_type(string_fa):
         value = int(re.findall(r'\d+', remaining)[0])
     else:
         if 'مگ' in remaining or 'گیگ' in remaining:
-            value = float(re.findall(r'\d+\.*\d*', remaining)[0]) * (1024 ** 3  if 'گیگ' in remaining else 1024 ** 2)
+            value = float(re.findall(r'\d+\.*\d*', remaining)[0]) * (1024 ** 3 if 'گیگ' in remaining else 1024 ** 2)
         if 'نامحدود' in remaining:
             value = inf
 
@@ -146,13 +148,69 @@ def detect_offer_by_name(string_fa):
         second_size = detect_offer_size_and_type(second)
 
         if first_size['type'] == second_size['type']:
-            new_offer.add_value(first_size['type'], first_size['value'])
-            new_offer.add_value(second_size['type'], second_size['value'], limitation_hours)
+            new_offer.add_volume(first_size['type'], first_size['value'])
+            new_offer.add_volume(second_size['type'], second_size['value'], limitation_hours)
         else:
-            new_offer.add_value(first_size['type'], first_size['value'], limitation_hours)
-            new_offer.add_value(second_size['type'], second_size['value'], limitation_hours)
+            new_offer.add_volume(first_size['type'], first_size['value'], limitation_hours)
+            new_offer.add_volume(second_size['type'], second_size['value'], limitation_hours)
     else:
         size = detect_offer_size_and_type(remaining)
-        new_offer.add_value(size['type'], size['value'], limitation_hours)
+        new_offer.add_volume(size['type'], size['value'], limitation_hours)
 
     return new_offer
+
+
+def get_size_by_value_and_unit(value, unit):
+    value = float(value)
+    if 'گیگا' in unit:
+        return value * 1024 ** 3
+    if 'مگا' in unit:
+        return value * 1024 ** 2
+    if 'کیلو' in unit:
+        return value * 1024
+    return None
+
+
+def detect_offer_by_active_object(object):
+    offer = detect_offer_by_name(object['offerName'])
+
+    offer.set_id(object['offerID'])
+    offer.set_start_time(datetime.strptime(object['startDateTime'], '%Y/%m/%d %H:%M'))
+    offer.set_expire_time(datetime.strptime(object['expiryDateTime'], '%Y/%m/%d %H:%M'))
+
+    if not object.get('individualArray'):
+        assert len(offer.volumes) == 1
+        offer.volumes[0].set_value(get_size_by_value_and_unit(float(object['totalValue']), object['totunit']))
+        offer.volumes[0].set_remaining(
+            get_size_by_value_and_unit(float(object['offerRemainingValue']), object['remunit']))
+
+
+    elif object['offerName'] == 'اینترنت (ساعات افت مصرف)':
+        offer.volumes = []
+
+        array = object['individualArray']
+        normal = array[1] if 'اینترنت (ساعات افت مصرف)' == array[0]['individualDAName'] else array[0]
+        limit_time = array[0] if 'اینترنت (ساعات افت مصرف)' == array[0]['individualDAName'] else array[1]
+
+        offer.add_volume(IrancellServiceType.INTERNATIONAL, None)
+        offer.volumes[0].set_remaining(get_size_by_value_and_unit(normal['individualDAValue'], normal['remunit']))
+
+        offer.add_volume(IrancellServiceType.INTERNATIONAL, None)
+        offer.volumes[1].set_remaining(get_size_by_value_and_unit(limit_time['individualDAValue'], limit_time['remunit']))
+        offer.volumes[1].set_limitation_hours([{'hour': '6', 'type': 'AM'}, {'hour': '12', 'type': 'AM'}])
+
+    else:
+        assert len(offer.volumes) == 2
+        array = object['individualArray']
+        if 'بین الملل' in array[0]['individualDAName'] or 'داخلی' in array[0]['individualDAName']:
+            internationalV = offer.volumes[0] if offer.volumes[0].type == IrancellServiceType.INTERNATIONAL else offer.volumes[1]
+            localV = offer.volumes[1] if offer.volumes[0].type == IrancellServiceType.INTERNATIONAL else offer.volumes[0]
+
+            international = array[0] if 'بین الملل' in array[0]['individualDAName'] else array[1]
+            local = array[1] if 'بین الملل' in array[0]['individualDAName'] else array[0]
+
+            internationalV.set_remaining(get_size_by_value_and_unit(international['individualDAValue'], international['remunit']))
+            localV.set_remaining(get_size_by_value_and_unit(local['individualDAValue'], local['remunit']))
+
+
+    return offer

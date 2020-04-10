@@ -7,10 +7,8 @@ import json
 from os import path, makedirs
 from src.util.logger import logger
 from src.services.irancell.config import BASE_URL, DEFAULT_HEADERS
-from src.models.offer import Offer
-from jdatetime import datetime
 import re
-from src.services.irancell.string_utils import detect_offer_by_name
+from src.services.irancell.string_utils import detect_offer_by_name, detect_offer_by_active_object
 
 
 class Irancell(BaseService):
@@ -20,9 +18,9 @@ class Irancell(BaseService):
         self._password = auth_info['password'].get()
         self._session_path = auth_info['session']['path'].get()
 
-        # self._session = self._get_session()
-        # self._authenticate()
-        # self._save_session()
+        self._session = self._get_session()
+        self._authenticate()
+        self._save_session()
 
     def _get_session(self):
         session = self._load_session()
@@ -124,65 +122,15 @@ class Irancell(BaseService):
         return float(size) * unit_factor
 
     def get_active_offers(self):
-        # account_info = self._get_account_info()
-        account_info = {'status': 0, 'subscriberType': '1', 'service': '1', 'account': {'productPrivateDas': [
-            {'offerID': '61090', 'offerName': 'یکساله 72 گیگ', 'startDateTime': '1399/01/11 19:07',
-             'expiryDateTime': '1400/01/10 19:07', 'type': 'D', 'percentage': 5.772060971049759, 'usedValue': '67.84',
-             'usedunit': ' گیگابایت ', 'offerRemainingValue': '4.16', 'offerRemainingValueUsingNational': '8.31',
-             'remunitNational': ' گیگابایت ', 'totalValue': '72.00', 'remunit': ' گیگابایت ', 'totunit': ' گیگابایت '},
-            {'offerID': '61301', 'offerName': 'اینترنت (ساعات افت مصرف)', 'startDateTime': '1399/01/22 18:33',
-             'expiryDateTime': '1399/02/21 23:59', 'type': 'D', 'percentage': 100, 'usedLocal': '0.00',
-             'usedGlobal': '0.00', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' مگابایت ',
-             'offerRemainingValue': '1.10', 'offerRemainingValueUsingNational': '2.20', 'remunitNational': ' گیگابایت ',
-             'totalValue': '1.10', 'remunit': ' گیگابایت ', 'totunit': ' گیگابایت ',
-             'individualArray': [{'individualDAName': 'اینترنت', 'individualDAValue': '1.00', 'remunit': ' گیگابایت '},
-                                 {'individualDAName': 'اینترنت (ساعات افت مصرف)', 'individualDAValue': '100.00',
-                                  'remunit': ' مگابایت '}]},
-            {'offerID': '61383', 'offerName': 'یکروزه (2تا7صبح) 500 مگ بین\u200cالملل با1 گیگ داخلی',
-             'startDateTime': '1399/01/22 18:12', 'expiryDateTime': '1399/01/23 18:12', 'type': 'D', 'percentage': 100,
-             'usedLocal': '0.00', 'usedGlobal': '0.00', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' مگابایت ',
-             'offerRemainingValue': '1.49', 'remunitNational': ' گیگابایت ', 'totalValue': '1.49',
-             'remunit': ' گیگابایت ', 'totunit': ' گیگابایت ', 'individualArray': [
-                {'individualDAName': 'اینترنت بین الملل', 'individualDAValue': '500.00', 'remunit': ' مگابایت '},
-                {'individualDAName': 'اینترنت داخلی', 'individualDAValue': '1.00', 'remunit': ' گیگابایت '}]}],
-                                                                                        'data': {'used': '67.84',
-                                                                                                 'remaining': '6.74',
-                                                                                                 'percentage': '0.09',
-                                                                                                 'dataRemUnit': ' گیگابایت ',
-                                                                                                 'dataUsedUnit': ' گیگابایت ',
-                                                                                                 'dataTotalUnit': ' گیگابایت ',
-                                                                                                 'peakRemaining': '6.64',
-                                                                                                 'offpeakRemaining': '100.00',
-                                                                                                 'peakRemainingUnit': ' گیگابایت ',
-                                                                                                 'offpeakRemainingUnit': ' مگابایت '},
-                                                                                        'voice': {'used': '0.00',
-                                                                                                  'remaining': '0.00',
-                                                                                                  'totalVoice': '0.00',
-                                                                                                  'percentage': 'NaN',
-                                                                                                  'voiceUnit': 'دقیقه'},
-                                                                                        'sms': {'used': '0.00',
-                                                                                                'remaining': '0.00',
-                                                                                                'totalSMS': '0.00',
-                                                                                                'percentage': 'NaN',
-                                                                                                'smsUnit': 'پیامک'},
-                                                                                        'nonProductPrivateDas': [],
-                                                                                        'balance': '59094',
-                                                                                        'tariffPlanName': 'طرح کنترل مصرف آزاد',
-                                                                                        'tariffPlanCode': 'DBU',
-                                                                                        'activationCode': '1391/01/12'}}
-
+        account_info = self._get_account_info()
         user_offers = []
         for active_offer in account_info['account']['productPrivateDas']:
-            offer = detect_offer_by_name(active_offer['offerName'])
-            offer.set_id(active_offer['offerID'])
-            offer.set_start_time(datetime.strptime(active_offer['startDateTime'], '%Y/%m/%d %H:%M'))
-            offer.set_expire_time(datetime.strptime(active_offer['expiryDateTime'], '%Y/%m/%d %H:%M'))
+            offer = detect_offer_by_active_object(active_offer)
             user_offers.append(offer)
         return user_offers
 
 
     def get_offers(self):
-        from src.services.irancell.x import data
-        data = filter(lambda x: x['category'] == 'Internet', data['newres'])
-
-        return [detect_offer_by_name(item['descfa']) for item in data]
+        offers_info = self._get_offers()
+        offers = filter(lambda x: x['category'] == 'Internet', offers_info['newres'])
+        return [detect_offer_by_name(item['descfa']) for item in offers]

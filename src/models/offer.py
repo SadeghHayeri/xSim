@@ -8,6 +8,15 @@ class Volume:
         self.remaining = None
         self.limitation_hours = limitation_hours
 
+    def set_remaining(self, remaining):
+        self.remaining = remaining
+
+    def set_value(self, value):
+        self.value = value
+
+    def set_limitation_hours(self, limitation_hours):
+        self.limitation_hours = limitation_hours
+
     def __str__(self):
         if self.type == IrancellServiceType.CHARKHONE:
             return str(self.value) + 'T'
@@ -37,7 +46,7 @@ class Offer:
     def set_duration(self, duration):
         self.duration = duration
 
-    def add_value(self, volume_type, value, limitation_hours=None):
+    def add_volume(self, volume_type, value, limitation_hours=None):
         self.volumes.append(Volume(volume_type, value, limitation_hours))
 
     def set_id(self, id):
