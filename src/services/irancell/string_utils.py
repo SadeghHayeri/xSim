@@ -1,7 +1,7 @@
 import re
 from src.models.enums import IrancellServiceType
 from src.models.offer import Offer
-
+from math import inf
 
 def detect_start_and_end_hours(string_fa):
     am_indexes = [{'type': 'AM', 'index': am.start()} for am in re.finditer('صبح', string_fa)]
@@ -123,7 +123,9 @@ def detect_offer_size_and_type(string_fa):
         value = int(re.findall(r'\d+', remaining)[0])
     else:
         if 'مگ' in remaining or 'گیگ' in remaining:
-            value = float(re.findall(r'\d+\.*\d*', remaining)[0]) * (1024 if 'گیگ' in remaining else 1)
+            value = float(re.findall(r'\d+\.*\d*', remaining)[0]) * (1024 ** 3  if 'گیگ' in remaining else 1024 ** 2)
+        if 'نامحدود' in remaining:
+            value = inf
 
     return {'type': service_type, 'value': value}
 

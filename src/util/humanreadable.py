@@ -1,4 +1,13 @@
+from math import inf
+
+
 def size_string(size, decimal_places=1):
+    if size is None:
+        return '?'
+
+    if size is inf:
+        return 'inf'
+
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size < 1024.0:
             break
