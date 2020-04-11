@@ -8,7 +8,7 @@ from os import path, makedirs
 from src.util.logger import logger
 from src.services.irancell.config import BASE_URL, DEFAULT_HEADERS
 import re
-from src.services.irancell.string_utils import detect_offer_by_name, detect_offer_by_active_object
+from src.services.irancell.string_utils import detect_offer_by_name_and_description, detect_offer_by_active_object
 
 
 class Irancell(BaseService):
@@ -90,37 +90,6 @@ class Irancell(BaseService):
         response = self._session.post(url, data=data, headers=DEFAULT_HEADERS)
         return json.loads(response.text)
 
-    def _get_offer_time_limitation(self, name):
-        ta_index = name.find('تا')
-        if ta_index == -1:
-            return None
-
-        lp_index = name.find('(') if name.find('(') >= 0 else 0
-        rp_index = name.find(')') if name.find(')') >= 0 else len(name)
-
-        left, right = max(ta_index - 8, lp_index + 1), min(ta_index + 8, rp_index)
-        name = name[left:right]
-
-        am_indexes = [{'type': 'AM', 'index': am.start()} for am in re.finditer('صبح', name)]
-        pm_indexes = [{'type': 'PM', 'index': pm.start()} for pm in re.finditer('ظهر', name)]
-
-        am_pm_indexes = sorted(am_indexes + pm_indexes, key=lambda name: name['index'])
-        assert 0 < len(am_pm_indexes) < 3
-
-        if len(am_pm_indexes) == 1:
-            first_am_pm = second_am_pm = am_pm_indexes[0]['type']
-        else:
-            first_am_pm, second_am_pm = am_pm_indexes[0]['type'], am_pm_indexes[1]['type']
-
-        first_hour, second_hour = list(map(int, re.findall(r'\d+', name)))
-
-        result = [{'hour': first_hour, 'type': first_am_pm}, {'hour': second_hour, 'type': second_am_pm}]
-        return result
-
-    def _get_data_size(self, size, unit):
-        unit_factor = 1024 ** 3 if unit == ' گیگابایت ' else 1024 ** 2
-        return float(size) * unit_factor
-
     def get_active_offers(self):
         account_info = self._get_account_info()
         user_offers = []
@@ -129,8 +98,15 @@ class Irancell(BaseService):
             user_offers.append(offer)
         return user_offers
 
+    def _get_offer_by_available_offer(self, offer_object):
+        offer = detect_offer_by_name_and_description(offer_object['descfa'], offer_object['detaildescfa'])
+        offer.id = offer_object['id']
+        offer.price = offer_object['price']
+        offer.expiry_day = offer_object['expiryday']
+        offer.auto_renew = offer_object['autorenew']
+        return offer
 
     def get_offers(self):
         offers_info = self._get_offers()
         offers = filter(lambda x: x['category'] == 'Internet', offers_info['newres'])
-        return [detect_offer_by_name(item['descfa']) for item in offers]
+        return [self._get_offer_by_available_offer(offer_object) for offer_object in offers]

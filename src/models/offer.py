@@ -1,5 +1,6 @@
 from src.util.humanreadable import size_string as hr_size
 from src.models.enums import IrancellServiceType
+from math import inf
 
 class Volume:
     def __init__(self, volume_type, value, limitation_hours=None):
@@ -41,7 +42,11 @@ class Offer:
         self.expire_time = expire_time
         self.duration = None
         self.fa_name = fa_name
+        self.price = 10
         self.volumes = []
+        self.expiry_day = None
+        self.auto_renew = None
+
 
     def set_duration(self, duration):
         self.duration = duration
@@ -57,6 +62,22 @@ class Offer:
 
     def set_expire_time(self, expire_time):
         self.expire_time = expire_time
+
+    def get_unit_price(self, count_limit_hours=True, count_local=False):
+        total_size = 0
+        for volume in self.volumes:
+
+            if (not volume.limitation_hours or count_limit_hours) \
+                    and (volume.type == IrancellServiceType.INTERNATIONAL or count_local):
+                total_size += volume.value
+
+        if total_size == 0:
+            return inf
+
+        if self.price is None:
+            return None
+
+        return int((self.price / 10) / (total_size / 1024 ** 3))
 
     def __str__(self):
         return ' - '.join([str(volume) for volume in self.volumes])
