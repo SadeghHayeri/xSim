@@ -3,6 +3,7 @@ from src.models.enums import IrancellServiceType
 from src.models.offer import Offer
 from math import inf
 from jdatetime import datetime
+from unidecode import unidecode
 
 
 def detect_start_and_end_hours(string_fa):
@@ -116,7 +117,7 @@ def detect_service_type(string_fa):
         return IrancellServiceType.INTERNATIONAL, remaining
 
 
-def detect_offer_size_and_type(string_fa):
+def detect_offer_size_and_type(string_fa, description):
     service_type, remaining = detect_service_type(string_fa)
 
     value = None
@@ -128,11 +129,14 @@ def detect_offer_size_and_type(string_fa):
             value = float(re.findall(r'\d+\.*\d*', remaining)[0]) * (1024 ** 3 if 'گیگ' in remaining else 1024 ** 2)
         if 'نامحدود' in remaining:
             value = inf
+            float_re = re.findall(r'\d+\.*\d*', description)
+            if float_re:
+                value = float(unidecode(float_re[0])) * (1024 ** 3 if 'گیگ' in description else 1024 ** 2)
 
     return {'type': service_type, 'value': value}
 
 
-def detect_offer_by_name(string_fa):
+def detect_offer_by_name_and_description(string_fa, description_fa):
     new_offer = Offer(fa_name=string_fa)
 
     duration, remaining = detect_duration(string_fa)
@@ -144,8 +148,8 @@ def detect_offer_by_name(string_fa):
         ba_index = remaining.find(' با')
         first, second = remaining[:ba_index], remaining[ba_index + 3:]
 
-        first_size = detect_offer_size_and_type(first)
-        second_size = detect_offer_size_and_type(second)
+        first_size = detect_offer_size_and_type(first, description_fa)
+        second_size = detect_offer_size_and_type(second, description_fa)
 
         if first_size['type'] == second_size['type']:
             new_offer.add_volume(first_size['type'], first_size['value'])
@@ -154,7 +158,7 @@ def detect_offer_by_name(string_fa):
             new_offer.add_volume(first_size['type'], first_size['value'], limitation_hours)
             new_offer.add_volume(second_size['type'], second_size['value'], limitation_hours)
     else:
-        size = detect_offer_size_and_type(remaining)
+        size = detect_offer_size_and_type(remaining, description_fa)
         new_offer.add_volume(size['type'], size['value'], limitation_hours)
 
     return new_offer
@@ -172,7 +176,7 @@ def get_size_by_value_and_unit(value, unit):
 
 
 def detect_offer_by_active_object(object):
-    offer = detect_offer_by_name(object['offerName'])
+    offer = detect_offer_by_name_and_description(object['offerName'], object['descfa'])
 
     offer.set_id(object['offerID'])
     offer.set_start_time(datetime.strptime(object['startDateTime'], '%Y/%m/%d %H:%M'))
