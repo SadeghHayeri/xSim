@@ -1,3 +1,5 @@
+config_path: /home/sadegh/.config/irancell/config.yaml
+
 irancell:
   auth:
     phone: ''

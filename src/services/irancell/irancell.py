@@ -7,7 +7,6 @@ import json
 from os import path, makedirs
 from src.util.logger import logger
 from src.services.irancell.config import BASE_URL, DEFAULT_HEADERS
-import re
 from src.services.irancell.string_utils import detect_offer_by_name_and_description, detect_offer_by_active_object
 
 
@@ -17,7 +16,9 @@ class Irancell(BaseService):
         self._phone = auth_info['phone'].get()
         self._password = auth_info['password'].get()
         self._session_path = auth_info['session']['path'].get()
+        self._session = None
 
+    def authenticate(self):
         self._session = self._get_session()
         self._authenticate()
         self._save_session()
@@ -44,6 +45,8 @@ class Irancell(BaseService):
         url = BASE_URL + '/api/verifyecarepass'
         response = self._session.post(url, headers=DEFAULT_HEADERS, data=data)
         result = json.loads(response.text)
+
+        logger.info(result);
 
         if result['status'] != 0:
             raise Exception('LOGIN FAILED: ' + result['statusMsg'])
