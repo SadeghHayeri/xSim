@@ -176,7 +176,7 @@ def get_size_by_value_and_unit(value, unit):
 
 
 def detect_offer_by_active_object(object):
-    offer = detect_offer_by_name_and_description(object['offerName'], object['descfa'])
+    offer = detect_offer_by_name_and_description(object['offerName'], object.get('descfa', ''))
 
     offer.set_id(object['offerID'])
     offer.set_start_time(datetime.strptime(object['startDateTime'], '%Y/%m/%d %H:%M'))
@@ -184,7 +184,7 @@ def detect_offer_by_active_object(object):
 
     if not object.get('individualArray'):
         assert len(offer.volumes) == 1
-        offer.volumes[0].set_value(get_size_by_value_and_unit(float(object['totalValue']), object['totunit']))
+        offer.volumes[0].set_size(get_size_by_value_and_unit(float(object['totalValue']), object['totunit']))
         offer.volumes[0].set_remaining(
             get_size_by_value_and_unit(float(object['offerRemainingValue']), object['remunit']))
 

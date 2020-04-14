@@ -3,31 +3,28 @@ from src.models.enums import IrancellServiceType
 from math import inf
 
 class Volume:
-    def __init__(self, volume_type, value, limitation_hours=None):
+    def __init__(self, volume_type, size, limitation_hours=None):
         self.type = volume_type
-        self.value = value
+        self.size = size
         self.remaining = None
         self.limitation_hours = limitation_hours
 
     def set_remaining(self, remaining):
         self.remaining = remaining
 
-    def set_value(self, value):
-        self.value = value
+    def set_size(self, size):
+        self.size = size
 
     def set_limitation_hours(self, limitation_hours):
         self.limitation_hours = limitation_hours
 
     def __str__(self):
         if self.type == IrancellServiceType.CHARKHONE:
-            return str(self.value) + 'T'
+            return str(self.size) + 'T'
 
-        if self.remaining:
-            string = '{}/{}'.format(hr_size(self.remaining), hr_size(self.value))
-        else:
-            string = hr_size(self.value)
-
-        string += ' I' if self.type == IrancellServiceType.INTERNATIONAL else ' L'
+        string = hr_size(self.size)
+        string += ' '
+        string += 'I' if self.type == IrancellServiceType.INTERNATIONAL else 'L'
 
         if self.limitation_hours:
             string += ' ({}{}-{}{})'.format(self.limitation_hours[0]['hour'], self.limitation_hours[0]['type'],
@@ -42,7 +39,7 @@ class Offer:
         self.expire_time = expire_time
         self.duration = None
         self.fa_name = fa_name
-        self.price = 10
+        self.price = None
         self.volumes = []
         self.expiry_day = None
         self.auto_renew = None
@@ -51,8 +48,8 @@ class Offer:
     def set_duration(self, duration):
         self.duration = duration
 
-    def add_volume(self, volume_type, value, limitation_hours=None):
-        self.volumes.append(Volume(volume_type, value, limitation_hours))
+    def add_volume(self, volume_type, size, limitation_hours=None):
+        self.volumes.append(Volume(volume_type, size, limitation_hours))
 
     def set_id(self, id):
         self.id = id
@@ -69,7 +66,7 @@ class Offer:
 
             if (not volume.limitation_hours or count_limit_hours) \
                     and (volume.type == IrancellServiceType.INTERNATIONAL or count_local):
-                total_size += volume.value
+                total_size += volume.size
 
         if total_size == 0:
             return inf
@@ -77,7 +74,15 @@ class Offer:
         if self.price is None:
             return None
 
-        return int((self.price / 10) / (total_size / 1024 ** 3))
+        return int(self.price / (total_size / 1024 ** 3))
+
+    def get_total_size(self, target_type=None):
+        total_size = 0
+        for volume in self.volumes:
+            if not target_type or volume.type == target_type:
+                total_size += volume.size
+        return total_size
 
     def __str__(self):
-        return ' - '.join([str(volume) for volume in self.volumes])
+        return ' + '.join([str(volume) for volume in self.volumes])
+
