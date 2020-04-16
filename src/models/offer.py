@@ -1,4 +1,4 @@
-from src.util.humanreadable import size_string as hr_size
+from src.util.humanreadable import size_string as hr_size, to_time_string
 from src.models.enums import IrancellServiceType
 from math import inf
 
@@ -84,5 +84,5 @@ class Offer:
         return total_size
 
     def __str__(self):
-        return ' + '.join([str(volume) for volume in self.volumes])
+        return to_time_string(self.duration) + ' ' + ' + '.join([str(volume) for volume in self.volumes])
 

@@ -46,7 +46,7 @@ class Irancell(BaseService):
         response = self._session.post(url, headers=DEFAULT_HEADERS, data=data)
         result = json.loads(response.text)
 
-        logger.info(result);
+        logger.info(result)
 
         if result['status'] != 0:
             raise Exception('LOGIN FAILED: ' + result['statusMsg'])
@@ -94,8 +94,7 @@ class Irancell(BaseService):
         return json.loads(response.text)
 
     def get_account_balance_and_offers(self):
-        # account_info = self._get_account_info()
-        account_info = {'status': 0, 'subscriberType': '1', 'service': '1', 'account': {'productPrivateDas': [{'offerID': '61640', 'offerName': 'هفتگی 5 گیگابایت', 'startDateTime': '1399/01/24 09:29', 'expiryDateTime': '1399/01/31 23:59', 'type': 'D', 'percentage': 1, 'usedLocal': '499.02', 'usedGlobal': '4.75', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' گیگابایت ', 'offerRemainingValue': '1.44', 'offerRemainingValueUsingNational': '2.88', 'remunitNational': ' مگابایت ', 'totalValue': '5.00', 'remunit': ' مگابایت ', 'totunit': ' گیگابایت '}, {'offerID': '61640', 'offerName': 'هفتگی 5 گیگابایت', 'startDateTime': '1399/01/24 09:29', 'expiryDateTime': '1399/01/31 23:59', 'type': 'D', 'percentage': 1, 'usedLocal': '499.02', 'usedGlobal': '4.75', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' گیگابایت ', 'offerRemainingValue': '1.44', 'offerRemainingValueUsingNational': '2.88', 'remunitNational': ' مگابایت ', 'totalValue': '5.00', 'remunit': ' مگابایت ', 'totunit': ' گیگابایت '}, {'offerID': '61640', 'offerName': 'هفتگی 5 گیگابایت', 'startDateTime': '1399/01/24 09:29', 'expiryDateTime': '1399/01/31 23:59', 'type': 'D', 'percentage': 1, 'usedLocal': '499.02', 'usedGlobal': '4.75', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' گیگابایت ', 'offerRemainingValue': '1.44', 'offerRemainingValueUsingNational': '2.88', 'remunitNational': ' مگابایت ', 'totalValue': '5.00', 'remunit': ' مگابایت ', 'totunit': ' گیگابایت '}, {'offerID': '61640', 'offerName': 'هفتگی 5 گیگابایت', 'startDateTime': '1399/01/24 09:29', 'expiryDateTime': '1399/01/31 23:59', 'type': 'D', 'percentage': 1, 'usedLocal': '499.02', 'usedGlobal': '4.75', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' گیگابایت ', 'offerRemainingValue': '1.44', 'offerRemainingValueUsingNational': '2.88', 'remunitNational': ' مگابایت ', 'totalValue': '5.00', 'remunit': ' مگابایت ', 'totunit': ' گیگابایت '}, {'offerID': '61640', 'offerName': 'هفتگی 5 گیگابایت', 'startDateTime': '1399/01/24 09:29', 'expiryDateTime': '1399/01/31 23:59', 'type': 'D', 'percentage': 1, 'usedLocal': '499.02', 'usedGlobal': '4.75', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' گیگابایت ', 'offerRemainingValue': '1.44', 'offerRemainingValueUsingNational': '2.88', 'remunitNational': ' مگابایت ', 'totalValue': '5.00', 'remunit': ' مگابایت ', 'totunit': ' گیگابایت '}, {'offerID': '61640', 'offerName': 'هفتگی 5 گیگابایت', 'startDateTime': '1399/01/24 09:29', 'expiryDateTime': '1399/01/31 23:59', 'type': 'D', 'percentage': 1, 'usedLocal': '499.02', 'usedGlobal': '4.75', 'usedLocalUnit': ' مگابایت ', 'usedGlobalUnit': ' گیگابایت ', 'offerRemainingValue': '1.44', 'offerRemainingValueUsingNational': '2.88', 'remunitNational': ' مگابایت ', 'totalValue': '5.00', 'remunit': ' مگابایت ', 'totunit': ' گیگابایت '}], 'data': {'used': '5.00', 'remaining': '1.44', 'percentage': '0.00', 'dataRemUnit': ' مگابایت ', 'dataUsedUnit': ' گیگابایت ', 'dataTotalUnit': ' گیگابایت ', 'peakRemaining': '1.44', 'offpeakRemaining': '0.00', 'peakRemainingUnit': ' مگابایت ', 'offpeakRemainingUnit': ' مگابایت '}, 'voice': {'used': '0.00', 'remaining': '0.00', 'totalVoice': '0.00', 'percentage': 'NaN', 'voiceUnit': 'دقیقه'}, 'sms': {'used': '0.00', 'remaining': '0.00', 'totalSMS': '0.00', 'percentage': 'NaN', 'smsUnit': 'پیامک'}, 'nonProductPrivateDas': [], 'balance': '29094', 'tariffPlanName': 'طرح کنترل مصرف آزاد', 'tariffPlanCode': 'DBU', 'activationCode': '1391/01/12'}}
+        account_info = self._get_account_info()
         user_offers = []
         for active_offer in account_info['account']['productPrivateDas']:
             offer = detect_offer_by_active_object(active_offer)
@@ -114,3 +113,30 @@ class Irancell(BaseService):
         offers_info = self._get_offers()
         offers = filter(lambda x: x['category'] == 'Internet', offers_info['newres'])
         return [self._get_offer_by_available_offer(offer_object) for offer_object in offers]
+
+    def buy_offer(self, id):
+        csrf = self._get_csrf()
+        data = {
+            'id': id,
+            '_csrf': csrf,
+        }
+        url = BASE_URL + '/api/boltonpurchaseoptions'
+        response = self._session.post(url, headers=DEFAULT_HEADERS, data=data)
+        options = json.loads(response.text)['PaymentOptions']
+
+        logger.info(options)
+
+
+        data = {
+            'id': id,
+            'orderreferenceno': options['orderreferenceno'],
+            'ipstransactionid': options['ipstransactionid'],
+            'userautorenewchoice': 'N',
+            'paymentMode': 'MA',
+            '_csrf': csrf,
+        }
+        url = BASE_URL + '/api/capturepaymentbolton'
+        response = self._session.post(url, headers=DEFAULT_HEADERS, data=data)
+        result = json.loads(response.text)
+        logger.info(result)
+
