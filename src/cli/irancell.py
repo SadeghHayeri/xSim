@@ -7,7 +7,6 @@ from terminaltables import AsciiTable
 from src.models.enums import IrancellServiceType
 from src.util.humanreadable import size_string as hr_size, to_time_string
 from hashlib import md5
-from time import sleep
 
 MAIN_COLOR = 'yellow'
 SORT_OPTIONS = ['id', 'name', 'type', 'size', 'international', 'local', 'price', 'unit-price', 'duration']
