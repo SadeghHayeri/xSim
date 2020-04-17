@@ -7,5 +7,10 @@ def cli():
     pass
 
 
-cli.add_command(irancell)
-cli()
+def main():
+    cli.add_command(irancell)
+    cli()
+
+
+if __name__ == '__main__':
+    main()
