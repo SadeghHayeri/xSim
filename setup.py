@@ -36,5 +36,6 @@ setup(
         'Unidecode==1.1.1',
         'urllib3==1.25.9',
         'yaspin==0.16.0',
+        'lxml==4.5.0',
     ]
 )
