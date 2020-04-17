@@ -5,7 +5,7 @@ with open('README.md') as readme_file:
 
 setup(
     name='xsim',
-    version='1.0.1',
+    version='1.0.2',
     description='A command-line interface to manage MTN / MCI account',
     long_description_content_type="text/markdown",
     long_description=README,
