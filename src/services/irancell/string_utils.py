@@ -111,7 +111,7 @@ def detect_service_type(string_fa):
         return IrancellServiceType.CHARKHONE, remaining
     elif 'داخلی' in string_fa:
         remaining = string_fa.replace('داخلی', '')
-        return IrancellServiceType.LOCAL, remaining
+        return IrancellServiceType.INTERNAL, remaining
     else:
         remaining = string_fa.replace('بین‌الملل', '')
         return IrancellServiceType.INTERNATIONAL, remaining

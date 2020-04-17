@@ -103,7 +103,7 @@ class Irancell(BaseService):
 
     def _get_offer_by_available_offer(self, offer_object):
         offer = detect_offer_by_name_and_description(offer_object['descfa'], offer_object['detaildescfa'])
-        offer.id = offer_object['id']
+        offer.set_id(offer_object['id'])
         offer.price = offer_object['price']
         offer.expiry_day = offer_object['expiryday']
         offer.auto_renew = offer_object['autorenew']
@@ -126,7 +126,6 @@ class Irancell(BaseService):
 
         logger.info(options)
 
-
         data = {
             'id': id,
             'orderreferenceno': options['orderreferenceno'],
@@ -139,4 +138,3 @@ class Irancell(BaseService):
         response = self._session.post(url, headers=DEFAULT_HEADERS, data=data)
         result = json.loads(response.text)
         logger.info(result)
-

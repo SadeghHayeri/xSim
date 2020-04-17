@@ -53,3 +53,7 @@ def to_time_string(hours):
         return '1 Hour'
 
     return '{} Hours'.format(int(hours))
+
+
+def to_toman(price):
+    return '?' if price is None else '{:0,.0f} Toman'.format(float(price / 10))

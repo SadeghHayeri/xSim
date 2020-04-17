@@ -1,6 +1,8 @@
 from src.util.humanreadable import size_string as hr_size, to_time_string
 from src.models.enums import IrancellServiceType
 from math import inf
+from hashlib import md5
+
 
 class Volume:
     def __init__(self, volume_type, size, limitation_hours=None):
@@ -35,6 +37,7 @@ class Volume:
 class Offer:
     def __init__(self, fa_name, id=None, start_time=None, expire_time=None):
         self.id = id
+        self.hash = md5(id.encode()).hexdigest()[5:10] if id else None
         self.start_time = start_time
         self.expire_time = expire_time
         self.duration = None
@@ -43,7 +46,7 @@ class Offer:
         self.volumes = []
         self.expiry_day = None
         self.auto_renew = None
-
+        self.type = 'Internet'
 
     def set_duration(self, duration):
         self.duration = duration
@@ -53,6 +56,7 @@ class Offer:
 
     def set_id(self, id):
         self.id = id
+        self.hash = md5(id.encode()).hexdigest()[5:10]
 
     def set_start_time(self, start_time):
         self.start_time = start_time
@@ -85,4 +89,3 @@ class Offer:
 
     def __str__(self):
         return to_time_string(self.duration) + ' ' + ' + '.join([str(volume) for volume in self.volumes])
-
