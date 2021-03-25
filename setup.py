@@ -29,7 +29,7 @@ setup(
         'confuse==1.1.0',
         'idna==2.9',
         'jdatetime==3.6.2',
-        'PyYAML==5.3.1',
+        'PyYAML==5.4',
         'requests==2.23.0',
         'soupsieve==2.0',
         'terminaltables==3.1.0',
