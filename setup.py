@@ -34,7 +34,7 @@ setup(
         'soupsieve==2.0',
         'terminaltables==3.1.0',
         'Unidecode==1.1.1',
-        'urllib3==1.25.9',
+        'urllib3==1.26.5',
         'yaspin==0.16.0',
         'lxml==4.5.0',
     ]
