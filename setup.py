@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'beautifulsoup4==4.9.0',
         'bs4==0.0.1',
-        'certifi==2020.4.5.1',
+        'certifi==2022.12.7',
         'chardet==3.0.4',
         'click==7.1.1',
         'confuse==1.1.0',
